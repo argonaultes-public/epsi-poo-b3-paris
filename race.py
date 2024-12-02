@@ -1,4 +1,4 @@
-
+import sqlite3
 ## Exercice des vaisseaux
 
 # Vous devez modéliser une course de vaisseaux spatiaux.
@@ -16,6 +16,7 @@ class Vaisseau:
         self.__latence = latence
         self.__distance = 0
         self.__classement = 0
+        self.__connection = sqlite3.connect('race.db')
 
     @property
     def distance(self):
@@ -32,6 +33,20 @@ class Vaisseau:
     @property
     def latence(self):
         return self.__latence
+
+
+    def save_in_db(self):
+        # INSERT INTO distance_historique (nom_vaisseau, couleur_du_vaisseau, vitesse_max, latence, distance, classement)
+        cursor = self.__connection.cursor()
+        cursor.execute('INSERT INTO distance_historique (nom_vaisseau, couleur, vitesse_max, latence, distance, classement) VALUES (?, ?, ?, ?, ?, ?)', (
+            self.__nom,
+            self.__couleur,
+            self.__vitesse_max,
+            self.__latence,
+            self.__distance,
+            self.__classement
+        ))
+        self.__connection.commit()
 
     def __eq__(self, other):
         return self.__nom == other.__nom and self.__couleur == other.__couleur
@@ -62,6 +77,17 @@ class Course:
         # list() []
         # tuple() : Non
         # set() : chaque élément est unique
+        #self.init_db()
+    
+    def init_db(self):
+        
+        connection = sqlite3.connect('race.db')
+        cursor = connection.cursor()
+        try:
+            cursor.execute('CREATE TABLE distance_historique (nom_vaisseau, couleur, vitesse_max, latence, distance, classement)')
+        except:
+            print('Table distance_historique existe déjà')
+            cursor.execute('TRUNCATE TABLE distance_historique')
 
     def inscrire_vaisseau(self, vaisseau : Vaisseau):
         self.__vaisseaux.add(vaisseau)
@@ -77,17 +103,26 @@ class Course:
             if self.__nb_ticks > v.latence:
                 v.distance = v.distance + v.vitesse_max
 
+            # sauvegarder en bdd la position du vaisseau
+            #v.save_in_db()
+
         # le temps avance d'1 seconde
         self.__nb_ticks = self.__nb_ticks + 1
 
     def run(self):
         winners = set()
         while len(winners) == 0:
-            winners = set()
             self.tick()
-            for v in self.__vaisseaux:
-                if v.distance > self.__circuit.total_distance:
-                    winners.add(v)
+            # solution 0
+            # for v in self.__vaisseaux:
+            #     if v.distance > self.__circuit.total_distance:
+            #         winners.add(v)
+            # solution 1: list comprehension
+            # a = {x for x in 'abracadabra' if x not in 'abc'}
+            # winners = {v for v in self.__vaisseaux if v.distance > self.__circuit.total_distance}
+            # solution 2: filter / lambda
+            winners = set(filter(lambda v: v.distance > self.__circuit.total_distance, self.__vaisseaux))
+
         return winners               
 
     # définir le classement 
