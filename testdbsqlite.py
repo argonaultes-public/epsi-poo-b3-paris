@@ -8,23 +8,23 @@ cursor = connection.cursor()
 
 # créer une nouvelle table
 try:
-    result = cursor.execute('CREATE TABLE movies(title)')
+    result = cursor.execute('CREATE TABLE movies(title, summary)')
 except:
     pass
 
 # prépare une liste de films à insérer
 best_movies = [
-    ('tenet',),
-    ('interstellar',),
-    ('inception',)
+    ('tenet', 'sf movie',),
+    ('interstellar', 'another sf movie',),
+    ('inception', 'yet another fr movie',)
 ]
 print(best_movies)
 # insertion des données avec executemany
-cursor.executemany('INSERT INTO movies VALUES (?)', best_movies)
+cursor.executemany('INSERT INTO movies VALUES (?,?)', best_movies)
 connection.commit()
 
 # vérifier le résultat avec un select
-result_movies = cursor.execute('SELECT title FROM movies')
+result_movies = cursor.execute('SELECT * FROM movies')
 
 # utilisation du fetchall pour récupérer dans une liste les résultats
 all_movies = result_movies.fetchall()
